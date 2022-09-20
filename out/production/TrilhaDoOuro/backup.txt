@@ -1,131 +1,97 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Ouro {
 
-
-
-    public static HashMap<String,String> caminhos = new HashMap<>();
-    public static HashMap<String,Integer> memoria = new HashMap<>();
     public static void main(String[] args) throws IOException{
-        // cada nodo da arvora sabe qual o caminho eh melhor, logo, se perguntar para o primeiro nodo conseguimos o melhor caminho
 
-        String[][] mapa = arq("teste_enunciado.txt");
+
+        String[][] mapa = arq("z10.txt");
+        strdump(mapa);
 
         HashMap<String,Integer> mem = new HashMap<>();
 
-        System.out.println("\nAlgoritmo sem memorização retornando apenas quantidade de ouro:");
+
         long tempoInicial = System.currentTimeMillis();
-        //System.out.println("Ouro encontrado: "+procura_ouro(mapa));
+        System.out.println("Ouro encontrado: "+procura_ouro(mapa));
         long tempoFinal = System.currentTimeMillis();
         System.out.printf("%.3f ms%n", (tempoFinal - tempoInicial) / 1000d);
 
 
-        System.out.println("\nAlgoritmo com memorização retornando apenas quantidade de ouro:");
+
         tempoInicial = System.currentTimeMillis();
         System.out.println("Ouro encontrado: "+procura_ouro_mem(mapa,mem));
         tempoFinal = System.currentTimeMillis();
         System.out.printf("%.3f ms%n", (tempoFinal - tempoInicial) / 1000d);
 
-
-        System.out.println(monta_caminho(caminhos,mapa.length-1));
-        System.out.println("EENNENENNENENNEEEN");
     }
 
     public static int procura_ouro_mem(String[][] m, HashMap<String,Integer> mem){
-        return ouro_mem(m,m.length-1,0);
+        return ouro_mem(m,m.length-1,0, "x", mem);
     }
     public static int procura_ouro(String[][] m){
         return ouro(m,m.length-1,0);
     }
 
-    public static int ouro_mem(String[][] matriz, int linha, int coluna){
-        if (memoria.containsKey(linha+""+coluna))
-            return memoria.get(linha+""+coluna);
-
+    public static int ouro_mem(String[][] matriz, int linha, int coluna, String key, HashMap<String,Integer> mem){
         int n = matriz.length - 1;
 
         int atual = 0;
 
         atual = toInt(matriz[linha][coluna]);
 
-        if(linha == 0 && coluna == n){
+        if(linha == 0 && coluna == n)
             return atual;
-        }
-
         if(coluna == n){
-            caminhos.put(linha+""+coluna,"N");
-            return atual + ouro_mem(matriz,linha-1,coluna);
+            return atual + ouro_mem(matriz,linha-1,coluna,"", mem);
         }
-
         if(linha == 0){
-            caminhos.put(linha+""+coluna,"E");
-            return atual + ouro_mem(matriz,linha,coluna+1);
+            return atual + ouro_mem(matriz,linha,coluna+1,"", mem);
         }
 
 
-        String norte = String.valueOf(ouro_mem(matriz,linha-1,coluna));
-        String leste = String.valueOf(ouro_mem(matriz,linha,coluna+1));
-        String nordeste = String.valueOf(ouro_mem(matriz,linha-1, coluna+1));
+        Integer r = 0;
+        String newkey_norte = key + (linha-1) + coluna;
+        String newkey_leste = key + linha + (coluna+1);
+        String newkey_nordeste = key + (linha-1) + (coluna+1);
+
+        String norte = "";
+        String leste = "";
+        String nordeste = "";
+
+        if(mem.containsKey(newkey_norte)){
+            norte = String.valueOf(mem.get(newkey_norte));
+        }else{
+            Integer in = ouro_mem(matriz,linha-1,coluna,newkey_norte, mem);
+            mem.put(newkey_norte,in);
+            norte = String.valueOf(in);
+        }
+
+        if(mem.containsKey(newkey_leste)){
+            leste = String.valueOf(mem.get(newkey_leste));
+        }else{
+            Integer in = ouro_mem(matriz,linha,coluna+1,newkey_leste, mem);
+            mem.put(newkey_leste,in);
+            leste = String.valueOf(in);
+        }
+
+        if(mem.containsKey(newkey_nordeste)){
+            nordeste = String.valueOf(mem.get(newkey_nordeste));
+        }else{
+            Integer in = ouro_mem(matriz,linha-1, coluna+1,newkey_nordeste, mem);
+            mem.put(newkey_nordeste,in);
+            nordeste = String.valueOf(in);
+        }
+
 
         int melhor_escolha = strMax ( String.valueOf(strMax( norte, leste)) , nordeste);
 
-        if (String.valueOf(melhor_escolha).equals(norte)){
-            caminhos.put(linha+""+coluna,"N");
-        }
-        if (String.valueOf(melhor_escolha).equals(nordeste)){
-            caminhos.put(linha+""+coluna,"NE");
-        }
-        if (String.valueOf(melhor_escolha).equals(leste)){
-            caminhos.put(linha+""+coluna,"E");
-        }
-
-        memoria.put(linha+""+coluna,atual + melhor_escolha);
+        //  verificar qual a melhor escolha entre (norte, nordeste e leste), e determinar o passo que
+        //  foi dado antes da recursão
 
         return atual + melhor_escolha;
-    }
-
-    public static String monta_caminho(HashMap<String,String> h, int n){
-        String r = "";
-
-        String index = n+"0";
-
-        while(h.containsKey(index)){
-            String direction = h.get(index);
-
-            int x = 0;
-            int y = 0;
-
-            switch (direction){
-                case "N":
-                    x = Integer.parseInt(index.substring(0,1));
-                    y = Integer.parseInt(index.substring(1,2));
-                    x--;
-                    index = Integer.toString(x) + Integer.toString(y);
-                    r = r.concat("N");
-                break;
-                case "E":
-                    x = Integer.parseInt(index.substring(0,1));
-                    y = Integer.parseInt(index.substring(1,2));
-                    y++;
-                    index = Integer.toString(x) + Integer.toString(y);
-                    r = r.concat("E");
-                break;
-                case "NE":
-                    x = Integer.parseInt(index.substring(0,1));
-                    y = Integer.parseInt(index.substring(1,2));
-                    x--;
-                    y++;
-                    index = Integer.toString(x) + Integer.toString(y);
-                    r = r.concat("NE");
-                break;
-            }
-        }
-
-        return r;
     }
 
     public static int ouro(String[][] matriz, int linha, int coluna){
@@ -207,4 +173,39 @@ public class Ouro {
         return matriz;
     }
 
+    public static void chardump(char[][] m){
+        int len = m.length;
+
+        for (int i = 0; i < len; i++) {
+            System.out.print("|");
+            for (int j = 0; j < len; j++) {
+                System.out.print(m[i][j] + "|");
+            }
+            System.out.println();
+        }
+    }
+
+    public static void intdump(int[][] m){
+        int len = m.length;
+
+        for (int i = 0; i < len; i++) {
+            System.out.print("|");
+            for (int j = 0; j < len; j++) {
+                System.out.print(m[i][j] + "|");
+            }
+            System.out.println();
+        }
+    }
+
+    public static void strdump(String[][] m){
+        int len = m.length;
+
+        for (int i = 0; i < len; i++) {
+            System.out.print("|");
+            for (int j = 0; j < len; j++) {
+                System.out.print(m[i][j] + "|");
+            }
+            System.out.println();
+        }
+    }
 }
