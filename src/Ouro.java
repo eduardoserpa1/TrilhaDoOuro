@@ -2,24 +2,37 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Queue;
 
 public class Ouro {
 
 
-
+    public static HashMap<String,String> caminhos_iterate = new HashMap<>();
     public static HashMap<String,String> caminhos = new HashMap<>();
     public static HashMap<String,Integer> memoria = new HashMap<>();
     public static void main(String[] args) throws IOException{
-        // cada nodo da arvora sabe qual o caminho eh melhor, logo, se perguntar para o primeiro nodo conseguimos o melhor caminho
 
-        String[][] mapa = arq("teste_enunciado.txt");
+
+        String[][] mapa = arq("test.txt");
+
+        int[][] teste = {   {1,2,3},
+                            {-1,5,6},
+                            {7,-200,9},
+        };
+
+        int mat[][] = { { 10, 10, 2, 0, 20, 4 },
+                { 1, 0, 0, 30, 2, 5 },
+                { 0, 10, 4, 0, 2, 0 },
+                { 1, 0, 2, 20, 0, 4 }
+        };
 
         HashMap<String,Integer> mem = new HashMap<>();
-
+        /*
         System.out.println("\nAlgoritmo sem memorização retornando apenas quantidade de ouro:");
         long tempoInicial = System.currentTimeMillis();
-        //System.out.println("Ouro encontrado: "+procura_ouro(mapa));
+        System.out.println("Ouro encontrado: "+procura_ouro(mapa));
         long tempoFinal = System.currentTimeMillis();
         System.out.printf("%.3f ms%n", (tempoFinal - tempoInicial) / 1000d);
 
@@ -33,6 +46,87 @@ public class Ouro {
 
         System.out.println(monta_caminho(caminhos,mapa.length-1));
         System.out.println("EENNENENNENENNEEEN");
+
+        */
+
+        ouro_nao_recursivo(mapa);
+    }
+
+
+
+    public static int ouro_nao_recursivo(String[][] matriz){
+        int r = 0;
+        int len = matriz.length-1;
+        ArrayList<Cell> fila = new ArrayList<>();
+
+        Cell origem = new Cell(len,0, 0,"");
+
+        fila.add(origem);
+
+        HashMap<String,Cell> caminhos_it = new HashMap<>();
+
+        int tamanho = 1;
+
+        for (int i = 0; i < tamanho; i++) {
+            Cell c = fila.get(i);
+
+            if (caminhos_it.containsKey(c.caminho)){
+
+            }
+
+            if(matriz[c.linha][c.coluna].equals("x")){
+                continue;
+            }else{
+                c.amount += toInt(matriz[c.linha][c.coluna]);
+            }
+
+            if(c.coluna == len && c.linha == 0){
+                c.is_final = true;
+            } else if (c.coluna == len) {
+                Cell cell = new Cell(c.linha-1, c.coluna,c.amount, c.caminho.concat("N"));
+                fila.add(cell);
+                caminhos_it.put(cell.caminho,cell);
+            } else if (c.linha == 0) {
+                Cell cell = new Cell(c.linha, c.coluna+1, c.amount, c.caminho.concat("E"));
+                fila.add(cell);
+                caminhos_it.put(cell.caminho,cell);
+            } else{
+                Cell cell_norte = new Cell(c.linha-1, c.coluna, c.amount, c.caminho.concat("N"));
+                Cell cell_leste = new Cell(c.linha, c.coluna+1, c.amount, c.caminho.concat("E"));
+                Cell cell_nordeste = new Cell(c.linha-1, c.coluna+1, c.amount, c.caminho.concat("NE"));
+
+                fila.add(cell_nordeste);
+                fila.add(cell_norte);
+                fila.add(cell_leste);
+                caminhos_it.put(cell_norte.caminho,cell_norte);
+                caminhos_it.put(cell_leste.caminho,cell_leste);
+                caminhos_it.put(cell_nordeste.caminho,cell_nordeste);
+            }
+
+            tamanho = fila.size();
+        }
+
+
+        Cell response = new Cell(0,0, 0,"");
+        response.amount = Integer.MIN_VALUE;
+
+        for (Cell c:fila)
+            System.out.println(c.caminho);
+
+        for (Cell c:fila){
+            if (c.is_final)
+                if (c.amount > response.amount)
+                    response = c;
+        }
+
+
+        System.out.println("r:"+r);
+
+        System.out.println("\n\nMELHOR CAMINHO E SUA QUANTIDADE EM OURO:");
+        System.out.println(response.caminho);
+        System.out.println(response.amount);
+
+        return r;
     }
 
     public static int procura_ouro_mem(String[][] m, HashMap<String,Integer> mem){
