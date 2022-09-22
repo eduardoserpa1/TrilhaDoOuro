@@ -209,3 +209,24 @@ public class Ouro {
         }
     }
 }
+// Dimensions of grid[][]
+        int N = grid.length;
+
+
+        // Stores maximum sum at each cell
+        // sum[i][j] from cell sum[0][0]
+        int [][]sum = new int[N + 1][N + 1];
+
+        // Iterate to compute the maximum
+        // sum path in the grid
+        for (int i = N-1; i >= 0; i--)
+        {
+            for (int j = 1; j <= N; j++)
+            {
+                // Update the maximum path sum
+                sum[i][j] = Math.max(Math.max(sum[i + 1][j], sum[i][j - 1]), sum[i + 1][j - 1]) + toInt(grid[i + 1][j - 1]);
+            }
+        }
+
+        // Return the maximum sum
+        return sum[N][N];

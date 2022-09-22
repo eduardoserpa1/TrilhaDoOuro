@@ -8,137 +8,139 @@ import java.util.Queue;
 
 public class Ouro {
 
-
-    public static HashMap<String,String> caminhos_iterate = new HashMap<>();
-    public static HashMap<String,String> caminhos = new HashMap<>();
     public static HashMap<String,Integer> memoria = new HashMap<>();
+    public static HashMap<String,String> memoria_path = new HashMap<>();
+    public static String[][] memoria_path_nao_recursivo;
+    static int menor_int = Integer.MIN_VALUE/20;
+
     public static void main(String[] args) throws IOException{
 
 
-        String[][] mapa = arq("test.txt");
+        String[][] mapa = arq("teste_enunciado.txt");
 
-        int[][] teste = {   {1,2,3},
-                            {-1,5,6},
-                            {7,-200,9},
-        };
-
-        int mat[][] = { { 10, 10, 2, 0, 20, 4 },
-                { 1, 0, 0, 30, 2, 5 },
-                { 0, 10, 4, 0, 2, 0 },
-                { 1, 0, 2, 20, 0, 4 }
-        };
-
-        HashMap<String,Integer> mem = new HashMap<>();
-        /*
-        System.out.println("\nAlgoritmo sem memorização retornando apenas quantidade de ouro:");
-        long tempoInicial = System.currentTimeMillis();
-        System.out.println("Ouro encontrado: "+procura_ouro(mapa));
         long tempoFinal = System.currentTimeMillis();
-        System.out.printf("%.3f ms%n", (tempoFinal - tempoInicial) / 1000d);
+        long tempoInicial = System.currentTimeMillis();
 
 
-        System.out.println("\nAlgoritmo com memorização retornando apenas quantidade de ouro:");
-        tempoInicial = System.currentTimeMillis();
-        System.out.println("Ouro encontrado: "+procura_ouro_mem(mapa,mem));
-        tempoFinal = System.currentTimeMillis();
-        System.out.printf("%.3f ms%n", (tempoFinal - tempoInicial) / 1000d);
+        int r1 = procura_ouro_mem(mapa);
+        System.out.println(r1);
+
+        System.out.println();
+        int r2 = procura_ouro_nao_recursivo(mapa);
+        System.out.println(r2);
 
 
-        System.out.println(monta_caminho(caminhos,mapa.length-1));
-        System.out.println("EENNENENNENENNEEEN");
 
-        */
-
-        ouro_nao_recursivo(mapa);
     }
+    public static String monta_caminho_nao_recursivo(String[][] m){
+        String r = "";
+
+        int linha_origem = m.length-2;
+        int coluna_origem = 1;
+
+        int linha = 0;
+        int coluna = m.length-1;
+
+        while ( !(linha == linha_origem && coluna == coluna_origem) ){
+
+            String oeste = "x";
+            String sul = "x";
+            String sudoeste = "x";
 
 
-
-    public static int ouro_nao_recursivo(String[][] matriz){
-        int r = 0;
-        int len = matriz.length-1;
-        ArrayList<Cell> fila = new ArrayList<>();
-
-        Cell origem = new Cell(len,0, 0,"");
-
-        fila.add(origem);
-
-        HashMap<String,Cell> caminhos_it = new HashMap<>();
-
-        int tamanho = 1;
-
-        for (int i = 0; i < tamanho; i++) {
-            Cell c = fila.get(i);
-
-            if (caminhos_it.containsKey(c.caminho)){
-
+            if(coluna > coluna_origem && linha < linha_origem){
+                oeste = m[linha][coluna-1];
+                sul = m[linha+1][coluna];
+                sudoeste = m[linha+1][coluna-1];
+            }else if(coluna > coluna_origem){
+                oeste = m[linha][coluna-1];
+            }else if(linha < linha_origem){
+                sul = m[linha+1][coluna];
             }
 
-            if(matriz[c.linha][c.coluna].equals("x")){
-                continue;
-            }else{
-                c.amount += toInt(matriz[c.linha][c.coluna]);
+            int index = strMaxS(sul,sudoeste,oeste);
+
+            switch (index){
+                case 1:
+                    r = r.concat(" ").concat("N");
+                    linha++;
+                    break;
+                case 2:
+                    r = r.concat(" ").concat("NE");
+                    linha++;
+                    coluna--;
+                    break;
+                case 3:
+                    r = r.concat(" ").concat("E");
+                    coluna--;
+                    break;
+
+                default:
+                    break;
             }
 
-            if(c.coluna == len && c.linha == 0){
-                c.is_final = true;
-            } else if (c.coluna == len) {
-                Cell cell = new Cell(c.linha-1, c.coluna,c.amount, c.caminho.concat("N"));
-                fila.add(cell);
-                caminhos_it.put(cell.caminho,cell);
-            } else if (c.linha == 0) {
-                Cell cell = new Cell(c.linha, c.coluna+1, c.amount, c.caminho.concat("E"));
-                fila.add(cell);
-                caminhos_it.put(cell.caminho,cell);
-            } else{
-                Cell cell_norte = new Cell(c.linha-1, c.coluna, c.amount, c.caminho.concat("N"));
-                Cell cell_leste = new Cell(c.linha, c.coluna+1, c.amount, c.caminho.concat("E"));
-                Cell cell_nordeste = new Cell(c.linha-1, c.coluna+1, c.amount, c.caminho.concat("NE"));
-
-                fila.add(cell_nordeste);
-                fila.add(cell_norte);
-                fila.add(cell_leste);
-                caminhos_it.put(cell_norte.caminho,cell_norte);
-                caminhos_it.put(cell_leste.caminho,cell_leste);
-                caminhos_it.put(cell_nordeste.caminho,cell_nordeste);
-            }
-
-            tamanho = fila.size();
         }
 
+        String r_reverse = "";
 
-        Cell response = new Cell(0,0, 0,"");
-        response.amount = Integer.MIN_VALUE;
-
-        for (Cell c:fila)
-            System.out.println(c.caminho);
-
-        for (Cell c:fila){
-            if (c.is_final)
-                if (c.amount > response.amount)
-                    response = c;
+        for (int i = r.length()-1; i >= 0; i--) {
+            r_reverse += r.charAt(i);
         }
 
-
-        System.out.println("r:"+r);
-
-        System.out.println("\n\nMELHOR CAMINHO E SUA QUANTIDADE EM OURO:");
-        System.out.println(response.caminho);
-        System.out.println(response.amount);
-
-        return r;
+        return r_reverse;
+    }
+    public static int procura_ouro_nao_recursivo(String[][] m){
+        int response = toInt(ouro_nao_recursivo(m));
+        System.out.println("melhor caminho: "+monta_caminho_nao_recursivo(memoria_path_nao_recursivo));
+        return response;
     }
 
-    public static int procura_ouro_mem(String[][] m, HashMap<String,Integer> mem){
-        return ouro_mem(m,m.length-1,0);
+    public static int procura_ouro_mem(String[][] m){
+        int response = ouro_mem(m,m.length-1,0);
+        System.out.println("melhor caminho: "+monta_caminho(memoria_path,m.length-1));
+        return response;
     }
     public static int procura_ouro(String[][] m){
         return ouro(m,m.length-1,0);
     }
 
+
+    public static String ouro_nao_recursivo(String[][] grid_str) {
+
+        int N = grid_str.length;
+
+        String [][]sum = new String[N + 1][N + 1];
+
+        for (int i = 0; i < N; i++) {
+            for (int j = 0; j <= N; j++) {
+                if (j==0)
+                    sum[i][j] = Integer.toString(menor_int);
+                else
+                    sum[i][j] = "0";
+            }
+        }
+        for (int i = 0; i <= N; i++) {
+            sum[N][i] = Integer.toString(menor_int);
+        }
+
+        for (int i = N-1; i >= 0; i--) {
+            for (int j = 1; j <= N; j++) {
+                if(i==N-1 && j == 1)
+                    sum[i][j] = grid_str[i][j-1];
+                else
+                    sum[i][j] = Integer.toString( strMax(Integer.toString(strMax(sum[i + 1][j], sum[i][j - 1])), sum[i + 1][j - 1]) + toInt(grid_str[i][j - 1]));
+            }
+        }
+
+        memoria_path_nao_recursivo = sum;
+
+        return sum[0][N];
+    }
+
+
     public static int ouro_mem(String[][] matriz, int linha, int coluna){
-        if (memoria.containsKey(linha+""+coluna))
-            return memoria.get(linha+""+coluna);
+        String label = linha+","+coluna;
+
 
         int n = matriz.length - 1;
 
@@ -150,75 +152,76 @@ public class Ouro {
             return atual;
         }
 
+        if (memoria.containsKey(label)){
+            return memoria.get(label);
+        }
+
+
         if(coluna == n){
-            caminhos.put(linha+""+coluna,"N");
+            memoria_path.put(label,"N");
             return atual + ouro_mem(matriz,linha-1,coluna);
         }
 
         if(linha == 0){
-            caminhos.put(linha+""+coluna,"E");
+            memoria_path.put(label,"E");
             return atual + ouro_mem(matriz,linha,coluna+1);
         }
-
 
         String norte = String.valueOf(ouro_mem(matriz,linha-1,coluna));
         String leste = String.valueOf(ouro_mem(matriz,linha,coluna+1));
         String nordeste = String.valueOf(ouro_mem(matriz,linha-1, coluna+1));
 
-        int melhor_escolha = strMax ( String.valueOf(strMax( norte, leste)) , nordeste);
+        int index = strMaxS ( norte, nordeste, leste);
+        int melhor_escolha = 0;
 
-        if (String.valueOf(melhor_escolha).equals(norte)){
-            caminhos.put(linha+""+coluna,"N");
-        }
-        if (String.valueOf(melhor_escolha).equals(nordeste)){
-            caminhos.put(linha+""+coluna,"NE");
-        }
-        if (String.valueOf(melhor_escolha).equals(leste)){
-            caminhos.put(linha+""+coluna,"E");
+        if (index == 1){
+            melhor_escolha = toInt(norte);
+            memoria_path.put(label,"N");
+        }else
+        if (index == 2){
+            melhor_escolha = toInt(nordeste);
+            memoria_path.put(label,"NE");
+        }else
+        if (index == 3){
+            melhor_escolha = toInt(leste);
+            memoria_path.put(label,"E");
         }
 
-        memoria.put(linha+""+coluna,atual + melhor_escolha);
+        memoria.put(label,atual + melhor_escolha);
+
 
         return atual + melhor_escolha;
     }
 
-    public static String monta_caminho(HashMap<String,String> h, int n){
+    public static String monta_caminho(HashMap<String,String> coord, int n){
         String r = "";
 
-        String index = n+"0";
+        int linha = n;
+        int coluna = 0;
 
-        while(h.containsKey(index)){
-            String direction = h.get(index);
+        while ( !(linha == 0 && coluna == n)){
+            String label = linha+","+coluna;
 
-            int x = 0;
-            int y = 0;
+            String coord_atual = coord.get(label);
 
-            switch (direction){
+            r = r.concat(coord_atual).concat(" ");
+
+            switch (coord_atual){
                 case "N":
-                    x = Integer.parseInt(index.substring(0,1));
-                    y = Integer.parseInt(index.substring(1,2));
-                    x--;
-                    index = Integer.toString(x) + Integer.toString(y);
-                    r = r.concat("N");
-                break;
-                case "E":
-                    x = Integer.parseInt(index.substring(0,1));
-                    y = Integer.parseInt(index.substring(1,2));
-                    y++;
-                    index = Integer.toString(x) + Integer.toString(y);
-                    r = r.concat("E");
+                    linha--;
                 break;
                 case "NE":
-                    x = Integer.parseInt(index.substring(0,1));
-                    y = Integer.parseInt(index.substring(1,2));
-                    x--;
-                    y++;
-                    index = Integer.toString(x) + Integer.toString(y);
-                    r = r.concat("NE");
+                    linha--;
+                    coluna++;
+                break;
+                case "E":
+                    coluna++;
+                break;
+
+                default:
                 break;
             }
         }
-
         return r;
     }
 
@@ -254,21 +257,45 @@ public class Ouro {
                 return Integer.parseInt(x.substring(1)) * -1;
 
         if (x.equals("x"))
-            return Integer.MIN_VALUE;
+            return menor_int;
         else
             return Integer.parseInt(x);
     }
 
+    public static int strMaxS(String a, String b, String c){
+        if(a.equals("x") && b.equals("x") && c.equals("x"))
+            return 2;
+        if (a.equals("x") && b.equals("x"))
+            return 3;
+        if (a.equals("x") && c.equals("x"))
+            return 2;
+        if (b.equals("x") && c.equals("x"))
+            return 1;
+
+
+        int aa = toInt(a);
+        int bb = toInt(b);
+        int cc = toInt(c);
+
+        if (aa >= bb && aa >= cc)
+            return 1;
+        else if (bb >= aa && bb >= cc)
+            return 2;
+        else if (cc >= aa && cc >= bb)
+            return 3;
+
+        return 0;
+    }
     public static int strMax(String a, String b){
         if(a.equals("x") && b.equals("x"))
-            return Integer.MIN_VALUE;
+            return menor_int;
         if (a.equals("x"))
-            return Integer.parseInt(b);
+            return toInt(b);
         if (b.equals("x"))
-            return Integer.parseInt(a);
+            return toInt(a);
 
-        int aa = Integer.parseInt(a);
-        int bb = Integer.parseInt(b);
+        int aa = toInt(a);
+        int bb = toInt(b);
 
         if (aa > bb)
             return aa;
